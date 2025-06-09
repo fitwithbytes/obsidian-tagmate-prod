@@ -79,7 +79,7 @@ export default class FolderTagMapperPlugin extends Plugin {
 			if (isRoot) {
 				isInFolder = true;
 			} else if (tagSubfolders) {
-				const allFolders = getAllSubfoldersRecursive(this.app.vault, folderPath);
+				const allFolders = getAllSubfoldersDeepestFirst(this.app.vault, folderPath);
 				isInFolder = allFolders.includes(file.parent?.path ?? '');
 			} else {
 				isInFolder = file.parent?.path === folderPath;
@@ -182,7 +182,7 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 						if (isRoot) {
 							files = this.plugin.app.vault.getFiles();
 						} else if (tagSubfolders) {
-							files = getAllFilesRecursive(this.plugin.app.vault, folderPath);
+							files = getAllFilesDeepestFirst(this.plugin.app.vault, folderPath);
 						} else {
 							files = this.plugin.app.vault.getFiles().filter(f => f.parent?.path === folderPath);
 						}
@@ -323,17 +323,6 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 			await this.plugin.saveSettings();
 			this.display();
 		};
-		containerEl.createEl('hr', { attr: { style: 'border: 0; border-top: 4px solid #bbb; margin: 24px 0 8px 0;' } });
-
-		// Replace the separate title and button with a flex row for perfect alignment:
-		// const mappingsHeaderRow = containerEl.createDiv({ attr: { style: 'display: flex; align-items: center; justify-content: space-between; margin-top: 24px; margin-bottom: 8px;' } });
-		// mappingsHeaderRow.createEl('h3', { text: 'Edit folder/tag mappings', attr: { style: 'margin: 0;' } });
-		// const addMappingBtn2 = mappingsHeaderRow.createEl('button', { text: '+ Add Folder Mapping', cls: 'ftb-add-mapping-btn', attr: { style: 'background: #2ecc40; color: #fff; border: none; border-radius: 4px; padding: 6px 16px; font-weight: bold; cursor: pointer; margin-left: 16px;' } });
-		// addMappingBtn2.onclick = async () => {
-		// 	this.plugin.settings.mappings.unshift({ folder: '', tags: [], active: true });
-		// 	await this.plugin.saveSettings();
-		// 	this.display();
-		// };
 
 		// Replace the forEach for mappings with a for loop for better control:
 		const mappings = this.plugin.settings.mappings || [];
@@ -343,10 +332,32 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 			const mappingSection = this.containerEl.createDiv({ cls: 'tagmate-mapping-section' });
 
 			// Mapping label (not bold, not oversized)
-			const mappingLabel = mappingSection.createEl('div', { text: `Mapping: ${idx + 1}`, cls: 'tagmate-mapping-label' });
+			const mappingLabel = mappingSection.createDiv({ cls: 'tagmate-mapping-label' });
+			mappingLabel.style.display = 'flex';
+			mappingLabel.style.alignItems = 'center';
+			mappingLabel.style.justifyContent = 'space-between';
 			mappingLabel.style.fontWeight = 'normal';
 			mappingLabel.style.fontSize = '1em';
 			mappingLabel.style.marginBottom = '0.2em';
+			mappingLabel.textContent = `Mapping: ${idx + 1}`;
+
+			// Löschen-Button für Mapping
+			const deleteMappingBtn = document.createElement('button');
+			deleteMappingBtn.textContent = 'Delete mapping';
+			deleteMappingBtn.style.background = '#e74c3c';
+			deleteMappingBtn.style.color = '#fff';
+			deleteMappingBtn.style.border = 'none';
+			deleteMappingBtn.style.borderRadius = '4px';
+			deleteMappingBtn.style.padding = '4px 12px';
+			deleteMappingBtn.style.marginLeft = '16px';
+			deleteMappingBtn.style.fontWeight = 'bold';
+			deleteMappingBtn.style.cursor = 'pointer';
+			deleteMappingBtn.onclick = async () => {
+				this.plugin.settings.mappings.splice(idx, 1);
+				await this.plugin.saveSettings();
+				this.display();
+			};
+			mappingLabel.appendChild(deleteMappingBtn);
 
 			// Description input (directly under label)
 			const descInput = mappingSection.createEl('input', { type: 'text', cls: 'tagmate-mapping-description-input' });
@@ -379,12 +390,21 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 			mappingRow.style.display = 'flex';
 			mappingRow.style.gap = '24px';
 			mappingRow.style.marginBottom = '12px';
+			mappingRow.style.alignItems = 'flex-end';
+
+			// Einheitliche Flex-Basis für alle drei Spalten
+			const colFlex = '1 1 0';
+			const colMinWidth = '0';
+			const colMaxWidth = 'none';
 
 			// Folder column
 			const folderCol = mappingRow.createDiv({ cls: 'tagmate-mapping-col' });
 			folderCol.style.display = 'flex';
 			folderCol.style.flexDirection = 'column';
-			folderCol.style.flex = '1 1 0';
+			folderCol.style.flex = colFlex;
+			folderCol.style.marginRight = '0';
+			folderCol.style.minWidth = colMinWidth;
+			folderCol.style.maxWidth = colMaxWidth;
 			folderCol.createEl('label', { text: 'Folder', attr: { style: 'font-size: 1em; font-weight: normal; margin-bottom: 2px;' } });
 			const folderDropdown = document.createElement('select');
 			folderDropdown.style.marginRight = '8px';
@@ -403,7 +423,10 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 			const filetypeCol = mappingRow.createDiv({ cls: 'tagmate-mapping-col' });
 			filetypeCol.style.display = 'flex';
 			filetypeCol.style.flexDirection = 'column';
-			filetypeCol.style.flex = '1 1 0';
+			filetypeCol.style.flex = colFlex;
+			filetypeCol.style.marginRight = '0';
+			filetypeCol.style.minWidth = colMinWidth;
+			filetypeCol.style.maxWidth = colMaxWidth;
 			filetypeCol.createEl('label', { text: 'Filetype', attr: { style: 'font-size: 1em; font-weight: normal; margin-bottom: 2px;' } });
 			const filetypeInputWrapper = filetypeCol.createDiv();
 			filetypeInputWrapper.style.display = 'flex';
@@ -472,7 +495,10 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 			const tagCol = mappingRow.createDiv({ cls: 'tagmate-mapping-col' });
 			tagCol.style.display = 'flex';
 			tagCol.style.flexDirection = 'column';
-			tagCol.style.flex = '1 1 0';
+			tagCol.style.flex = colFlex;
+			tagCol.style.marginRight = '0';
+			tagCol.style.minWidth = colMinWidth;
+			tagCol.style.maxWidth = colMaxWidth;
 			tagCol.createEl('label', { text: 'Tags', attr: { style: 'font-size: 1em; font-weight: normal; margin-bottom: 2px;' } });
 			const tagInputWrapper = tagCol.createDiv();
 			tagInputWrapper.style.display = 'flex';
@@ -804,11 +830,11 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 			const includeSubfolders = subfoldersToggle.checked;
 			const tagFilesWithoutExtension = noExtToggle.checked;
 			const isRoot = folderPath === '' || folderPath === '/';
-			let files: TFile[] = [];
+			let files = [];
 			if (isRoot) {
 				files = this.plugin.app.vault.getFiles();
 			} else if (includeSubfolders) {
-				files = getAllFilesRecursive(this.plugin.app.vault, folderPath);
+				files = getAllFilesDeepestFirst(this.plugin.app.vault, folderPath);
 			} else {
 				files = this.plugin.app.vault.getFiles().filter(f => f.parent?.path === folderPath);
 			}
@@ -818,30 +844,38 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 				if (!(hasNoExt || filetypes.some(ft => file.path.endsWith(ft)))) continue;
 				let fileContent = await this.plugin.app.vault.read(file);
 				let changed = false;
+				// Entferne Inline-Tags
 				for (const tag of removeTags) {
-					const tagPattern = new RegExp(`#${tag.name}(\\s|$)`, 'gm');
+					const tagPattern = new RegExp(`#${tag.name}(\s|$)`, 'gm');
 					if (tagPattern.test(fileContent)) {
 						fileContent = fileContent.replace(tagPattern, '');
 						changed = true;
 					}
 				}
-				// Remove from YAML frontmatter
+				// Entferne aus YAML frontmatter (auto oder yaml)
 				let yamlBlockMatch = fileContent.match(/^---\n([\s\S]*?)\n---\n?/);
-				let yamlBlock = yamlBlockMatch ? yamlBlockMatch[0] : null;
-				let yamlObj: any = {};
-				let yamlTags: string[] = [];
-				if (yamlBlock) {
+				if (yamlBlockMatch) {
+					let yamlBlock = yamlBlockMatch[0];
+					let yamlObj = {} as any;
 					try {
 						yamlObj = jsyaml.load(yamlBlock.replace(/^---\n|\n---\n?/g, '')) || {};
-						yamlTags = Array.isArray(yamlObj.tags) ? yamlObj.tags : (typeof yamlObj.tags === 'string' ? [yamlObj.tags] : []);
-					} catch {}
-					const origLen = yamlTags.length;
-					yamlTags = yamlTags.filter(t => !removeTags.map(rt => rt.name).includes(t));
-					if (yamlTags.length !== origLen) {
-						changed = true;
-						yamlObj.tags = yamlTags;
-						const newYaml = '---\n' + jsyaml.dump(yamlObj).trim() + '\n---\n';
-						fileContent = fileContent.replace(/^---\n([\sS]*?)\n---\n?/, newYaml);
+						if (yamlObj.tags) {
+							let tagsArr = Array.isArray(yamlObj.tags) ? [...yamlObj.tags] : (typeof yamlObj.tags === 'string' ? [yamlObj.tags] : []);
+							const tagsToRemove = removeTags.map(rt => rt.name);
+							const filteredTags = tagsArr.filter((t: string) => !tagsToRemove.includes(t));
+							if (filteredTags.length !== tagsArr.length) {
+								if (filteredTags.length > 0) {
+									yamlObj.tags = filteredTags;
+								} else {
+									delete yamlObj.tags;
+								}
+								const newYaml = '---\n' + jsyaml.dump(yamlObj, { lineWidth: -1 }).replace(/\n+$/, '') + '\n---\n';
+								fileContent = fileContent.replace(yamlBlock, newYaml);
+								changed = true;
+							}
+						}
+					} catch (e) {
+						console.error('YAML tag removal error:', e);
 					}
 				}
 				if (changed) {
@@ -870,19 +904,27 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 	}
 }
 
-// Helper: Recursively collect all subfolders (including the base folder itself)
-function getAllSubfoldersRecursive(vault: App["vault"], baseFolder: string): string[] {
-	let result = [baseFolder];
-	let folders = vault.getAllLoadedFiles().filter(f => f instanceof TFolder && f.parent && f.parent.path === baseFolder).map(f => f.path);
-	for (let sub of folders) {
-		result = result.concat(getAllSubfoldersRecursive(vault, sub));
+// Helper: Recursively collect all subfolders (deepest first)
+function getAllSubfoldersDeepestFirst(vault: App["vault"], baseFolder: string): string[] {
+	const folders: string[] = [];
+	function recurse(folderPath: string) {
+		const subfolders = vault.getAllLoadedFiles().filter(f => f instanceof TFolder && f.parent && f.parent.path === folderPath).map(f => f.path);
+		for (const sub of subfolders) {
+			recurse(sub);
+		}
+		folders.push(folderPath);
 	}
-	return result;
+	recurse(baseFolder);
+	return folders;
 }
 
-// Helper: Recursively collect all files in a folder and its subfolders
-function getAllFilesRecursive(vault: App["vault"], baseFolder: string): TFile[] {
-	const folders = getAllSubfoldersRecursive(vault, baseFolder);
-	const files = vault.getAllLoadedFiles().filter(f => f instanceof TFile && folders.includes(f.parent?.path ?? "")) as TFile[];
+// Helper: Recursively collect all files in a folder and its subfolders (deepest folders first)
+function getAllFilesDeepestFirst(vault: App["vault"], baseFolder: string): TFile[] {
+	const folders = getAllSubfoldersDeepestFirst(vault, baseFolder);
+	const files: TFile[] = [];
+	for (const folder of folders) {
+		const folderFiles = vault.getAllLoadedFiles().filter(f => f instanceof TFile && f.parent?.path === folder) as TFile[];
+		files.push(...folderFiles);
+	}
 	return files;
 }
