@@ -43,7 +43,7 @@ export default class FolderTagMapperPlugin extends Plugin {
 		}));
 		this.addCommand({
 			id: "add-tags-to-existing-notes",
-			name: "Add tags to existing notes (Folder Tag Mapper)",
+			name: "Add tags to existing notes (Tagmate)",
 			callback: async () => {
 				await this.saveSettings(); // Always save before tagging
 				this.app.vault.getMarkdownFiles().forEach((file) => {
@@ -149,7 +149,7 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 		// --- GLOBAL CONFIGURATION ---
-		containerEl.createEl('h2', { text: 'Folder Tag Mapper' });
+		containerEl.createEl('h2', { text: 'Tagmate' });
 
 		// Global Configuration Section
 		const globalConfigHeaderRow = containerEl.createDiv({ attr: { style: 'display: flex; align-items: center; justify-content: space-between; margin-top: 32px; margin-bottom: 0;' } });
@@ -819,7 +819,7 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 				let fileContent = await this.plugin.app.vault.read(file);
 				let changed = false;
 				for (const tag of removeTags) {
-					const tagPattern = new RegExp(`#${tag}(\\s|$)`, 'gm');
+					const tagPattern = new RegExp(`#${tag.name}(\\s|$)`, 'gm');
 					if (tagPattern.test(fileContent)) {
 						fileContent = fileContent.replace(tagPattern, '');
 						changed = true;

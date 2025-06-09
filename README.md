@@ -1,5 +1,9 @@
 # Tagmate – Obsidian Folder/Tag Mapper
 
+<p align="center">
+  <img src="tagmate.png" width="200" alt="tagmate logo">
+</p>
+
 **Plugin:** Tagmate  
 **Author:** fitwithbytes
 

@@ -1,6 +1,6 @@
 {
-	"id": "folder-tag-mapper",
-	"name": "Folder Tag Mapper",
+	"id": "tagmate",
+	"name": "Tagmate",
 	"version": "0.1.0",
 	"minAppVersion": "0.15.0",
 	"description": "automatically tags files in an obsidian vault based on a directory and its subdirectories.",

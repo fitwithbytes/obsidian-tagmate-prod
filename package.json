@@ -1,5 +1,5 @@
 {
-  "name": "obsidian-folder-tag-mapper",
+  "name": "tagmate",
   "version": "0.1.0",
   "description": "Map folders to tags with a graphical UI in settings.",
   "main": "main.js",
