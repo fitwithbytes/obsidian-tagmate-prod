@@ -918,7 +918,6 @@ function getAllSubfoldersDeepestFirst(vault: App["vault"], baseFolder: string): 
 	return folders;
 }
 
-// Helper: Recursively collect all files in a folder and its subfolders (deepest folders first)
 function getAllFilesDeepestFirst(vault: App["vault"], baseFolder: string): TFile[] {
 	const folders = getAllSubfoldersDeepestFirst(vault, baseFolder);
 	const files: TFile[] = [];
