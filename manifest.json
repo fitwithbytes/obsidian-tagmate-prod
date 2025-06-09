@@ -1,0 +1,10 @@
+{
+	"id": "folder-tag-mapper",
+	"name": "Folder Tag Mapper",
+	"version": "0.1.0",
+	"minAppVersion": "0.15.0",
+	"description": "automatically tags files in an obsidian vault based on a directory and its subdirectories.",
+	"author": "fitwithbytes",
+	"authorUrl": "https://github.com/fitwithbytes/obsidian-tagmate",
+	"isDesktopOnly": false
+}

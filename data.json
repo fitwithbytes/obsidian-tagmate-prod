@@ -1,0 +1,13 @@
+{
+  "mappings": [
+    {
+      "folder": "",
+      "tags": [],
+      "active": true,
+      "filetypes": [
+        "asdf"
+      ]
+    }
+  ],
+  "taggingEnabled": true
+}
