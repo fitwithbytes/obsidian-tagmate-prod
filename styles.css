@@ -34,3 +34,149 @@
   border: 1px solid #ccc;
   font-size: 0.95em;
 }
+.ftb-save-config-btn {
+  background: #0074D9;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 16px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 16px;
+  margin-right: 0;
+  margin-left: auto;
+}
+
+.ftb-separator {
+  border: 0;
+  border-top: 1.5px solid #bbb;
+  margin: 16px 0 16px 0;
+}
+
+.ftb-section-header {
+  font-weight: bold;
+  font-size: 1.1em;
+  margin-bottom: 2px;
+  margin-top: 0;
+}
+
+.ftb-section-desc {
+  font-size: 0.95em;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.ftb-section {
+  margin-bottom: 24px;
+}
+
+.ftb-row {
+  position: relative;
+  width: 100%;
+  min-height: 40px;
+  margin-bottom: 16px;
+  display: flex;
+}
+
+.ftb-row-left {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 220px;
+}
+
+.ftb-row-right {
+  position: absolute;
+  left: 70%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+}
+
+.ftb-label {
+  margin-left: 8px;
+  white-space: nowrap;
+}
+.ftb-global-config-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 32px;
+  margin-bottom: 0;
+}
+.ftb-global-config-header {
+  margin: 0;
+}
+.ftb-mapping-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: normal;
+  font-size: 1em;
+  margin-bottom: 0.2em;
+}
+.ftb-delete-mapping-btn {
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 12px;
+  margin-left: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+.ftb-mapping-description-input {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.5em;
+}
+.ftb-mapping-row {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 12px;
+  align-items: flex-end;
+}
+.ftb-mapping-col {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  margin-right: 0;
+  min-width: 0;
+  max-width: none;
+}
+.ftb-folder-dropdown {
+  margin-right: 8px;
+}
+.ftb-remove-tags-section {
+  padding: 16px;
+  border: 2.5px solid #e74c3c;
+  border-radius: 8px;
+  margin-bottom: 32px;
+}
+.ftb-remove-tags-header-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.ftb-remove-tag-btn {
+  white-space: normal;
+  line-height: 1.2;
+  padding: 18px 12px;
+  min-width: 80px;
+  min-height: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: #e74c3c;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+}

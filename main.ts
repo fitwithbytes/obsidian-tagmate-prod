@@ -43,7 +43,7 @@ export default class FolderTagMapperPlugin extends Plugin {
 		}));
 		this.addCommand({
 			id: "add-tags-to-existing-notes",
-			name: "Add tags to existing notes (Tagmate)",
+			name: "Add tags to existing notes",
 			callback: async () => {
 				await this.saveSettings(); // Always save before tagging
 				this.app.vault.getMarkdownFiles().forEach((file) => {
@@ -61,10 +61,10 @@ export default class FolderTagMapperPlugin extends Plugin {
 		let yamlTags: string[] = [];
 		let yamlBlockMatch = fileContent.match(/^---\n([\s\S]*?)\n---\n?/);
 		let yamlBlock = yamlBlockMatch ? yamlBlockMatch[0] : null;
-		let yamlObj: any = {};
+		let yamlObj: Record<string, unknown> = {};
 		if (yamlBlock) {
 			try {
-				yamlObj = jsyaml.load(yamlBlock.replace(/^---\n|\n---\n?/g, '')) || {};
+				yamlObj = (jsyaml.load(yamlBlock.replace(/^---\n|\n---\n?/g, '')) as Record<string, unknown>) || {};
 				yamlTags = Array.isArray(yamlObj.tags) ? yamlObj.tags : (typeof yamlObj.tags === 'string' ? [yamlObj.tags] : []);
 			} catch {}
 		}
@@ -152,18 +152,18 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 		containerEl.createEl('h2', { text: 'Tagmate' });
 
 		// Global Configuration Section
-		const globalConfigHeaderRow = containerEl.createDiv({ attr: { style: 'display: flex; align-items: center; justify-content: space-between; margin-top: 32px; margin-bottom: 0;' } });
-		globalConfigHeaderRow.createEl('h3', { text: 'Global Configuration', attr: { style: 'margin: 0;' } });
-		const saveConfigBtn = globalConfigHeaderRow.createEl('button', { text: 'Save Configuration', cls: 'ftb-save-config-btn', attr: { style: 'background: #0074D9; color: #fff; border: none; border-radius: 4px; padding: 6px 16px; font-weight: bold; cursor: pointer; margin-left: 16px; margin-right: 0; margin-left: auto;' } });
+		const globalConfigHeaderRow = containerEl.createDiv({ cls: 'ftb-global-config-header-row' });
+		globalConfigHeaderRow.createEl('h3', { text: 'Global Configuration', cls: 'ftb-global-config-header' });
+		const saveConfigBtn = globalConfigHeaderRow.createEl('button', { text: 'Save Configuration', cls: 'ftb-save-config-btn' });
 		saveConfigBtn.onclick = async () => {
 			await this.plugin.saveSettings();
 			new Notice('Configuration saved!');
 		};
 		// Restore thin separator line between Global Configuration and Tag all existing notes now
-		containerEl.createEl('hr', { attr: { style: 'border: 0; border-top: 1.5px solid #bbb; margin: 16px 0 16px 0;' } });
+		containerEl.createEl('hr', { attr: { style: 'border: 0; border-top: 1.5px solid #bbb; margin: 16px 0 16px 0;' }, cls: 'ftb-separator' });
 
 		// --- TAG ALL EXISTING NOTES ---
-		containerEl.createEl('div', { text: 'Tag all existing notes now', attr: { style: 'font-weight: bold; font-size: 1.1em; margin-bottom: 2px; margin-top: 0;' } });
+		containerEl.createEl('div', { text: 'Tag all existing notes now', cls: 'ftb-section-header' });
 		// No <hr> or separator here!
 		new Setting(containerEl)
 			.setDesc("Apply tags to all existing notes in mapped folders.")
@@ -193,10 +193,10 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 							let yamlTags: string[] = [];
 							let yamlBlockMatch = fileContent.match(/^---\n([\s\S]*?)\n---\n?/);
 							let yamlBlock = yamlBlockMatch ? yamlBlockMatch[0] : null;
-							let yamlObj: any = {};
+							let yamlObj: Record<string, unknown> = {};
 							if (yamlBlock) {
 								try {
-									yamlObj = jsyaml.load(yamlBlock.replace(/^---\n|\n---\n?/g, '')) || {};
+									yamlObj = (jsyaml.load(yamlBlock.replace(/^---\n|\n---\n?/g, '')) as Record<string, unknown>) || {};
 									yamlTags = Array.isArray(yamlObj.tags) ? yamlObj.tags : (typeof yamlObj.tags === 'string' ? [yamlObj.tags] : []);
 								} catch {}
 							}
@@ -225,30 +225,30 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 						await this.plugin.tagFile(file);
 						taggedCount++;
 						// @ts-ignore
-						if ((window as any).Notice) new (window as any).Notice(`Tagging: ${file.path} (${i+1}/${total})`);
+						if ('Notice' in window && typeof (window as any).Notice === 'function') new (window as any).Notice(`Tagging: ${file.path} (${i+1}/${total})`);
 						await new Promise(res => setTimeout(res, 50));
 					}
 					// Final summary notice
 					// @ts-ignore
-					if ((window as any).Notice) new (window as any).Notice(`Tagged ${taggedCount} notes out of ${total}.`);
+					if ('Notice' in window && typeof (window as any).Notice === 'function') new (window as any).Notice(`Tagged ${taggedCount} notes out of ${total}.`);
 				});
 			});
 		// Remove the thin line under 'Tag all existing notes now' and add a thin line between this and auto-tag new notes
-		containerEl.createEl('hr', { attr: { style: 'border: 0; border-top: 1.5px solid #bbb; margin: 16px 0 16px 0;' } });
+		containerEl.createEl('hr', { attr: { style: 'border: 0; border-top: 1.5px solid #bbb; margin: 16px 0 16px 0;' }, cls: 'ftb-separator' });
 
 		// --- AUTO-TAG NEW NOTES ---
-		const autoTagSection = containerEl.createDiv({ attr: { style: 'margin-bottom: 24px;' } });
-		autoTagSection.createEl('div', { text: 'Auto-tag new notes', attr: { style: 'font-weight: bold; font-size: 1.1em; margin-bottom: 2px;' } });
-		autoTagSection.createEl('div', { text: 'Enable or disable auto-tagging for new notes in all mappings at once. Only one option can be active at a time.', attr: { style: 'font-size: 0.95em; color: #666; margin-bottom: 8px;' } });
-		const autoTagRow = autoTagSection.createDiv({ attr: { style: 'position: relative; width: 100%; min-height: 40px; margin-bottom: 16px;' } });
+		const autoTagSection = containerEl.createDiv({ cls: 'ftb-section' });
+		autoTagSection.createEl('div', { text: 'Auto-tag new notes', cls: 'ftb-section-header' });
+		autoTagSection.createEl('div', { text: 'Enable or disable auto-tagging for new notes in all mappings at once. Only one option can be active at a time.', cls: 'ftb-section-desc' });
+		const autoTagRow = autoTagSection.createDiv({ cls: 'ftb-row' });
 		// Enable (left border)
-		const enableAutoTagWrapper = autoTagRow.createDiv({ attr: { style: 'position: absolute; left: 0; top: 50%; transform: translateY(-50%); display: flex; align-items: center; justify-content: flex-start; width: 220px;' } });
+		const enableAutoTagWrapper = autoTagRow.createDiv({ cls: 'ftb-row-left' });
+		enableAutoTagWrapper.createEl('label', { text: 'Enable auto-tag new notes', cls: 'ftb-label' });
 		const enableAutoTagCheckbox = enableAutoTagWrapper.createEl('input', { type: 'checkbox' });
-		enableAutoTagWrapper.createEl('label', { text: 'Enable auto-tag new notes', attr: { style: 'margin-left: 8px;' } });
 		// Disable (move a bit more right, keep text on one line)
-		const disableAutoTagWrapper = autoTagRow.createDiv({ attr: { style: 'position: absolute; left: 74%; top: 50%; transform: translate(-50%, -50%); display: flex; align-items: center; white-space: nowrap;' } });
+		const disableAutoTagWrapper = autoTagRow.createDiv({ cls: 'ftb-row-right' });
+		disableAutoTagWrapper.createEl('label', { text: 'Disable auto-tag new notes', cls: 'ftb-label' });
 		const disableAutoTagCheckbox = disableAutoTagWrapper.createEl('input', { type: 'checkbox' });
-		disableAutoTagWrapper.createEl('label', { text: 'Disable auto-tag new notes', attr: { style: 'margin-left: 8px; white-space: nowrap;' } });
 		// Only check if all mappings have the property true/false
 		const allEnabled = this.plugin.settings.mappings.length > 0 && this.plugin.settings.mappings.every(m => m.autoTagNewNotes === true);
 		const allDisabled = this.plugin.settings.mappings.length > 0 && this.plugin.settings.mappings.every(m => m.autoTagNewNotes === false);
@@ -272,24 +272,24 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 		};
 
 		// Add thin separator line after auto-tag new notes section
-		containerEl.createEl('hr', { attr: { style: 'border: 0; border-top: 1.5px solid #bbb; margin: 16px 0 16px 0;' } });
+		containerEl.createEl('hr', { attr: { style: 'border: 0; border-top: 1.5px solid #bbb; margin: 16px 0 16px 0;' }, cls: 'ftb-separator' });
 
 		// --- ENABLE/DISABLE ALL MAPPINGS ---
-		containerEl.createEl('div', { text: 'Enable/Disable all mappings', attr: { style: 'font-weight: bold; font-size: 1.1em; margin-bottom: 2px; margin-top: 0;' } });
-		const enableDisableDesc = containerEl.createDiv();
+		containerEl.createEl('div', { text: 'Enable/Disable all mappings', cls: 'ftb-section-header' });
+		const enableDisableDesc = containerEl.createDiv({ cls: 'ftb-section-desc' });
 		enableDisableDesc.textContent = 'Enable or disable all mappings at once. "Enable all mappings" will activate all folder/tag mappings, while "Disable all mappings" will deactivate them.';
 		enableDisableDesc.style.marginBottom = '8px';
 		enableDisableDesc.style.fontSize = '0.95em';
 		enableDisableDesc.style.color = '#666';
-		const enableDisableRow = containerEl.createDiv({ attr: { style: 'position: relative; width: 100%; min-height: 40px; margin-bottom: 16px;' } });
+		const enableDisableRow = containerEl.createDiv({ cls: 'ftb-row' });
 		// Enable (left border)
-		const enableAllWrapper = enableDisableRow.createDiv({ attr: { style: 'position: absolute; left: 0; top: 50%; transform: translateY(-50%); display: flex; align-items: center; justify-content: flex-start; width: 220px;' } });
+		const enableAllWrapper = enableDisableRow.createDiv({ cls: 'ftb-row-left' });
 		const enableAllSwitch = enableAllWrapper.createEl('input', { type: 'checkbox' });
-		enableAllWrapper.createEl('label', { text: 'Enable all mappings', attr: { style: 'margin-left: 8px;' } });
+		enableAllWrapper.createEl('label', { text: 'Enable all mappings', cls: 'ftb-label' });
 		// Disable (70% from left)
-		const disableAllWrapper = enableDisableRow.createDiv({ attr: { style: 'position: absolute; left: 70%; top: 50%; transform: translate(-50%, -50%); display: flex; align-items: center;' } });
+		const disableAllWrapper = enableDisableRow.createDiv({ cls: 'ftb-row-right' });
 		const disableAllSwitch = disableAllWrapper.createEl('input', { type: 'checkbox' });
-		disableAllWrapper.createEl('label', { text: 'Disable all mappings', attr: { style: 'margin-left: 8px;' } });
+		disableAllWrapper.createEl('label', { text: 'Disable all mappings', cls: 'ftb-label' });
 		// Only check if all mappings have the property true/false
 		const enableAll = this.plugin.settings.mappings.length > 0 && this.plugin.settings.mappings.every(m => m.active === true);
 		const disableAll = this.plugin.settings.mappings.length > 0 && this.plugin.settings.mappings.every(m => m.active === false);
@@ -332,26 +332,14 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 			const mappingSection = this.containerEl.createDiv({ cls: 'tagmate-mapping-section' });
 
 			// Mapping label (not bold, not oversized)
-			const mappingLabel = mappingSection.createDiv({ cls: 'tagmate-mapping-label' });
-			mappingLabel.style.display = 'flex';
-			mappingLabel.style.alignItems = 'center';
-			mappingLabel.style.justifyContent = 'space-between';
-			mappingLabel.style.fontWeight = 'normal';
-			mappingLabel.style.fontSize = '1em';
-			mappingLabel.style.marginBottom = '0.2em';
+			const mappingLabel = mappingSection.createDiv({ cls: 'ftb-mapping-label' });
+			mappingLabel.classList.add('ftb-mapping-label');
 			mappingLabel.textContent = `Mapping: ${idx + 1}`;
 
 			// Löschen-Button für Mapping
 			const deleteMappingBtn = document.createElement('button');
 			deleteMappingBtn.textContent = 'Delete mapping';
-			deleteMappingBtn.style.background = '#e74c3c';
-			deleteMappingBtn.style.color = '#fff';
-			deleteMappingBtn.style.border = 'none';
-			deleteMappingBtn.style.borderRadius = '4px';
-			deleteMappingBtn.style.padding = '4px 12px';
-			deleteMappingBtn.style.marginLeft = '16px';
-			deleteMappingBtn.style.fontWeight = 'bold';
-			deleteMappingBtn.style.cursor = 'pointer';
+			deleteMappingBtn.classList.add('ftb-delete-mapping-btn');
 			deleteMappingBtn.onclick = async () => {
 				this.plugin.settings.mappings.splice(idx, 1);
 				await this.plugin.saveSettings();
@@ -360,7 +348,8 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 			mappingLabel.appendChild(deleteMappingBtn);
 
 			// Description input (directly under label)
-			const descInput = mappingSection.createEl('input', { type: 'text', cls: 'tagmate-mapping-description-input' });
+			const descInput = mappingSection.createEl('input', { type: 'text' });
+			descInput.classList.add('ftb-mapping-description-input');
 			descInput.value = mapping.description || '';
 			descInput.placeholder = 'Description (optional)';
 			descInput.style.display = 'block';
@@ -386,11 +375,8 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 			// After the description input, replace the separate folder/filetype/tag blocks with a flex row:
 
 			// Flex row for folder, filetype, tags
-			const mappingRow = mappingSection.createDiv({ cls: 'tagmate-mapping-row' });
-			mappingRow.style.display = 'flex';
-			mappingRow.style.gap = '24px';
-			mappingRow.style.marginBottom = '12px';
-			mappingRow.style.alignItems = 'flex-end';
+			const mappingRow = mappingSection.createDiv({ cls: 'ftb-mapping-row' });
+			mappingRow.classList.add('ftb-mapping-row');
 
 			// Einheitliche Flex-Basis für alle drei Spalten
 			const colFlex = '1 1 0';
@@ -398,16 +384,11 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 			const colMaxWidth = 'none';
 
 			// Folder column
-			const folderCol = mappingRow.createDiv({ cls: 'tagmate-mapping-col' });
-			folderCol.style.display = 'flex';
-			folderCol.style.flexDirection = 'column';
-			folderCol.style.flex = colFlex;
-			folderCol.style.marginRight = '0';
-			folderCol.style.minWidth = colMinWidth;
-			folderCol.style.maxWidth = colMaxWidth;
+			const folderCol = mappingRow.createDiv({ cls: 'ftb-mapping-col' });
+			folderCol.classList.add('ftb-mapping-col');
 			folderCol.createEl('label', { text: 'Folder', attr: { style: 'font-size: 1em; font-weight: normal; margin-bottom: 2px;' } });
 			const folderDropdown = document.createElement('select');
-			folderDropdown.style.marginRight = '8px';
+			folderDropdown.classList.add('ftb-folder-dropdown');
 			folderDropdown.add(new Option('All files', ''));
 			this.getAllFolders().forEach(folder => {
 				folderDropdown.add(new Option(folder, folder));
@@ -420,13 +401,8 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 			folderCol.appendChild(folderDropdown);
 
 			// Filetype column
-			const filetypeCol = mappingRow.createDiv({ cls: 'tagmate-mapping-col' });
-			filetypeCol.style.display = 'flex';
-			filetypeCol.style.flexDirection = 'column';
-			filetypeCol.style.flex = colFlex;
-			filetypeCol.style.marginRight = '0';
-			filetypeCol.style.minWidth = colMinWidth;
-			filetypeCol.style.maxWidth = colMaxWidth;
+			const filetypeCol = mappingRow.createDiv({ cls: 'ftb-mapping-col' });
+			filetypeCol.classList.add('ftb-mapping-col');
 			filetypeCol.createEl('label', { text: 'Filetype', attr: { style: 'font-size: 1em; font-weight: normal; margin-bottom: 2px;' } });
 			const filetypeInputWrapper = filetypeCol.createDiv();
 			filetypeInputWrapper.style.display = 'flex';
@@ -436,7 +412,7 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 			filetypeContainer.style.display = 'flex';
 			filetypeContainer.style.alignItems = 'center';
 			filetypeContainer.style.marginRight = '16px';
-			filetypeContainer.innerHTML = '';
+			filetypeContainer.empty();
 			const addFiletypeInput = document.createElement('input');
 			addFiletypeInput.type = 'text';
 			addFiletypeInput.placeholder = 'Add filetype... (ex. .md)';
@@ -492,13 +468,8 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 			}
 
 			// Tags column
-			const tagCol = mappingRow.createDiv({ cls: 'tagmate-mapping-col' });
-			tagCol.style.display = 'flex';
-			tagCol.style.flexDirection = 'column';
-			tagCol.style.flex = colFlex;
-			tagCol.style.marginRight = '0';
-			tagCol.style.minWidth = colMinWidth;
-			tagCol.style.maxWidth = colMaxWidth;
+			const tagCol = mappingRow.createDiv({ cls: 'ftb-mapping-col' });
+			tagCol.classList.add('ftb-mapping-col');
 			tagCol.createEl('label', { text: 'Tags', attr: { style: 'font-size: 1em; font-weight: normal; margin-bottom: 2px;' } });
 			const tagInputWrapper = tagCol.createDiv();
 			tagInputWrapper.style.display = 'flex';
@@ -507,7 +478,7 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 			const tagContainer2 = tagInputWrapper.createDiv('ftb-tag-container');
 			tagContainer2.style.display = 'flex';
 			tagContainer2.style.alignItems = 'center';
-			tagContainer2.innerHTML = '';
+			tagContainer2.empty();
 			const addTagInput2 = document.createElement('input');
 			addTagInput2.type = 'text';
 			addTagInput2.placeholder = 'Add tag... (ex. #physics)';
@@ -627,6 +598,7 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 		containerEl.createEl('hr', { attr: { style: 'border: 0; border-top: 4px solid #e74c3c; margin: 32px 0 8px 0;' } });
 
 		const removeTagsHeaderRow = containerEl.createDiv();
+		removeTagsHeaderRow.classList.add('ftb-remove-tags-header-row');
 		removeTagsHeaderRow.style.display = 'flex';
 		removeTagsHeaderRow.style.alignItems = 'center';
 		removeTagsHeaderRow.style.marginBottom = '8px';
@@ -665,7 +637,7 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 		filetypeContainer.style.alignItems = 'center';
 		filetypeContainer.style.marginRight = '16px';
 		let removeFiletypes: string[] = [];
-		filetypeContainer.innerHTML = '';
+		filetypeContainer.empty();
 		const addFiletypeInput = document.createElement('input');
 		addFiletypeInput.type = 'text';
 		addFiletypeInput.placeholder = '.md';
@@ -706,7 +678,7 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 		tagContainer.style.alignItems = 'center';
 		tagContainer.style.marginRight = '16px';
 		let removeTags: { name: string, type: 'auto' | 'yaml' | 'inline' }[] = [];
-		tagContainer.innerHTML = '';
+		tagContainer.empty();
 		const addTagInput = document.createElement('input');
 		addTagInput.type = 'text';
 		addTagInput.placeholder = '#tag';
@@ -807,7 +779,11 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 
 		const removeTagBtn = document.createElement('button');
 		removeTagBtn.textContent = '';
-		removeTagBtn.innerHTML = 'Delete these<br>tags now';
+		const labelSpan = document.createElement('span');
+		labelSpan.textContent = 'Delete these tags now';
+		labelSpan.style.display = 'block';
+		removeTagBtn.appendChild(labelSpan);
+		removeTagBtn.classList.add('ftb-remove-tag-btn');
 		removeTagBtn.style.whiteSpace = 'normal';
 		removeTagBtn.style.lineHeight = '1.2';
 		removeTagBtn.style.padding = '18px 12px'; // Increased vertical padding
@@ -858,7 +834,7 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 					let yamlBlock = yamlBlockMatch[0];
 					let yamlObj = {} as any;
 					try {
-						yamlObj = jsyaml.load(yamlBlock.replace(/^---\n|\n---\n?/g, '')) || {};
+						yamlObj = (jsyaml.load(yamlBlock.replace(/^---\n|\n---\n?/g, '')) as Record<string, unknown>) || {};
 						if (yamlObj.tags) {
 							let tagsArr = Array.isArray(yamlObj.tags) ? [...yamlObj.tags] : (typeof yamlObj.tags === 'string' ? [yamlObj.tags] : []);
 							const tagsToRemove = removeTags.map(rt => rt.name);
@@ -884,7 +860,7 @@ class FolderTagMapperSettingTab extends PluginSettingTab {
 				}
 			}
 			// @ts-ignore
-			if ((window as any).Notice) new (window as any).Notice(`Deleted selected tags from ${deletedCount} notes.`);
+			if ('Notice' in window && typeof (window as any).Notice === 'function') new (window as any).Notice(`Deleted selected tags from ${deletedCount} notes.`);
 			addTagInput.value = '';
 			tagContainer.querySelectorAll('.ftb-tag-chip').forEach(chip => chip.remove());
 			removeTags.length = 0;
@@ -922,7 +898,7 @@ function getAllFilesDeepestFirst(vault: App["vault"], baseFolder: string): TFile
 	const folders = getAllSubfoldersDeepestFirst(vault, baseFolder);
 	const files: TFile[] = [];
 	for (const folder of folders) {
-		const folderFiles = vault.getAllLoadedFiles().filter(f => f instanceof TFile && f.parent?.path === folder) as TFile[];
+		const folderFiles = vault.getAllLoadedFiles().filter((f): f is TFile => f instanceof TFile && f.parent?.path === folder);
 		files.push(...folderFiles);
 	}
 	return files;
